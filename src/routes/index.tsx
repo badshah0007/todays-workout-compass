@@ -48,6 +48,16 @@ const PLANS: Record<string, { title: string; focus: string; list: Ex[] }> = {
 const DAY_PLAN = [null, "A", "B", "C", "A", "B", "C"];
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+// Same cooldown for every training day, shown after the workout.
+const COOLDOWN: Ex[] = [
+  { name: "Cat–Cow", sets: "10 slow reps", anim: "catCow", cue: "Mobilize your spine without forcing the movement." },
+  { name: "Kneeling Hip-Flexor Stretch", sets: "2 × 30s each side", anim: "hipFlexor", cue: "Keep your pelvis controlled and avoid excessive lower-back arching." },
+  { name: "Wall Angels", sets: "2 × 10 reps", anim: "wallAngels", cue: "Improve shoulder movement and upper-back positioning." },
+  { name: "Bird Dog", sets: "2 × 8 each side", anim: "birdDog", cue: "Maintain a stable torso as you extend the opposite arm and leg." },
+  { name: "Dead Hang — optional", sets: "2 × 20–30s", anim: "deadHang", cue: "Use a comfortable grip and stop if your shoulders hurt. Any decompression is temporary, not permanent height growth." },
+  { name: "Chin Tucks", sets: "2 × 10 reps", anim: "chinTucks", cue: "Gently draw your chin backward without tilting your head up or down." },
+];
+
 function Index() {
   const [day, setDay] = useState<number | null>(null);
   useEffect(() => setDay(new Date().getDay()), []);
@@ -66,7 +76,16 @@ function Index() {
         {plan && <p className="mt-2 font-mono text-primary">{plan.title}</p>}
 
         {plan ? (
-          <WorkoutCarousel key={key} exercises={plan.list} />
+          <>
+            <WorkoutCarousel key={key} exercises={plan.list} />
+            <section className="mt-16 border-t border-border pt-10">
+              <h2 className="animate-in fade-in slide-in-from-top-4 text-sm uppercase tracking-[0.3em] text-muted-foreground duration-700">
+                Cooldown
+              </h2>
+              <p className="mt-2 font-mono text-primary">Every training day, after the workout</p>
+              <WorkoutCarousel key={`${key}-cooldown`} exercises={COOLDOWN} label="Cooldown exercises" />
+            </section>
+          </>
         ) : day === 0 ? (
           <p className="mt-8 text-lg text-muted-foreground">Recover, stretch, and come back stronger tomorrow. 💤</p>
         ) : null}
