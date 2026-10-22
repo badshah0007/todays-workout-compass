@@ -142,3 +142,10 @@
     color: var(--color-foreground);
   }
 }
+
+@keyframes ex-rep {
+  0%, 15% { opacity: 0; }
+  45%, 65% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+.ex-frame { animation: ex-rep 2.4s ease-in-out infinite; }
