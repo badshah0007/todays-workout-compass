@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { ExerciseAnimation, type AnimKey } from "@/components/ExerciseAnimation";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Ex = { name: string; sets?: string };
+type Ex = { name: string; sets?: string; anim?: AnimKey; cue?: string };
 const WARMUP: Ex = { name: "Warmup — Cycling 10 min" };
 const SETS = "15 · 12 · 10";
 
@@ -23,7 +24,14 @@ const PLANS: Record<string, { title: string; focus: string; list: Ex[] }> = {
   A: {
     title: "MON – THU",
     focus: "Chest & Triceps",
-    list: [WARMUP, { name: "M/C Chest Press", sets: SETS }, { name: "D/B Pull Over", sets: SETS }, { name: "M/C Pec Fly", sets: SETS }, { name: "D/B Both Hand Ext", sets: SETS }, { name: "Cable Push Down", sets: SETS }],
+    list: [
+      { ...WARMUP, anim: "cycling", cue: "Steady pace, light resistance to warm up." },
+      { name: "M/C Chest Press", sets: SETS, anim: "chestPress", cue: "Back flat on pad, push handles forward, control the return." },
+      { name: "D/B Pull Over", sets: SETS, anim: "pullOver", cue: "Arms slightly bent, lower weight behind head, pull back over chest." },
+      { name: "M/C Pec Fly", sets: SETS, anim: "pecFly", cue: "Open arms wide, squeeze chest to bring them together." },
+      { name: "D/B Both Hand Ext", sets: SETS, anim: "overheadExt", cue: "Elbows fixed up, lower weight behind head, extend straight up." },
+      { name: "Cable Push Down", sets: SETS, anim: "pushDown", cue: "Elbows tucked at sides, push bar down till arms are straight." },
+    ],
   },
   B: {
     title: "TUE – FRI",
@@ -70,7 +78,15 @@ function Index() {
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary font-black text-primary-foreground">
                   {i === 0 ? "🚴" : i}
                 </span>
-                <span className="flex-1 font-semibold uppercase tracking-wide">{ex.name}</span>
+                {ex.anim && (
+                  <span className="h-24 w-24 shrink-0 rounded-lg bg-secondary p-1">
+                    <ExerciseAnimation kind={ex.anim} />
+                  </span>
+                )}
+                <span className="flex-1">
+                  <span className="block font-semibold uppercase tracking-wide">{ex.name}</span>
+                  {ex.cue && <span className="mt-1 block text-sm text-muted-foreground">{ex.cue}</span>}
+                </span>
                 {ex.sets && <span className="font-mono text-sm text-muted-foreground">{ex.sets}</span>}
               </li>
             ))}
