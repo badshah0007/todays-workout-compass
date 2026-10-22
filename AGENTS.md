@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep exercise carousel presentation in a shared component using the existing carousel controls; daily schedule selection stays in the index route so presentation changes do not alter routines.

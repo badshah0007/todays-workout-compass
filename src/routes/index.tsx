@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ExerciseAnimation, type AnimKey } from "@/components/ExerciseAnimation";
+import { type AnimKey } from "@/components/ExerciseAnimation";
+import { WorkoutCarousel } from "@/components/WorkoutCarousel";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -55,42 +56,17 @@ function Index() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
-      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 animate-pulse rounded-full bg-primary/30 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-32 h-96 w-96 animate-pulse rounded-full bg-accent/40 blur-3xl [animation-delay:1s]" />
-
-      <div className="relative mx-auto max-w-2xl px-5 py-14">
+      <div className="relative mx-auto max-w-3xl px-5 py-8 sm:py-12">
         <p className="animate-in fade-in slide-in-from-top-4 text-sm uppercase tracking-[0.3em] text-muted-foreground duration-700">
           {day !== null ? DAYS[day] : ""}
         </p>
-        <h1 className="mt-2 animate-in fade-in slide-in-from-left-6 text-5xl font-black uppercase tracking-tight duration-700 md:text-7xl">
+        <h1 className="mt-2 text-4xl font-black uppercase sm:text-5xl">
           {plan ? plan.focus : day === 0 ? "Rest Day" : ""}
         </h1>
         {plan && <p className="mt-2 font-mono text-primary">{plan.title}</p>}
 
         {plan ? (
-          <ol className="mt-10 space-y-3">
-            {plan.list.map((ex, i) => (
-              <li
-                key={ex.name}
-                style={{ animationDelay: `${i * 120}ms` }}
-                className="group flex items-center gap-4 rounded-xl border border-border bg-card/70 p-4 backdrop-blur animate-in fade-in slide-in-from-bottom-6 fill-mode-both duration-700 transition-transform hover:-translate-y-1 hover:border-primary"
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary font-black text-primary-foreground">
-                  {i === 0 ? "🚴" : i}
-                </span>
-                {ex.anim && (
-                  <span className="block aspect-square w-28 shrink-0 sm:w-36">
-                    <ExerciseAnimation kind={ex.anim} />
-                  </span>
-                )}
-                <span className="flex-1">
-                  <span className="block font-semibold uppercase tracking-wide">{ex.name}</span>
-                  {ex.cue && <span className="mt-1 block text-sm text-muted-foreground">{ex.cue}</span>}
-                </span>
-                {ex.sets && <span className="font-mono text-sm text-muted-foreground">{ex.sets}</span>}
-              </li>
-            ))}
-          </ol>
+          <WorkoutCarousel key={key} exercises={plan.list} />
         ) : day === 0 ? (
           <p className="mt-8 text-lg text-muted-foreground">Recover, stretch, and come back stronger tomorrow. 💤</p>
         ) : null}
