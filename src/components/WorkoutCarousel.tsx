@@ -5,7 +5,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 
 type Exercise = { name: string; sets?: string; anim?: AnimKey; cue?: string };
 
-export function WorkoutCarousel({ exercises }: { exercises: Exercise[] }) {
+export function WorkoutCarousel({ exercises, label = "Today's exercises" }: { exercises: Exercise[]; label?: string }) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 
