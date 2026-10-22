@@ -76,7 +76,16 @@ function Index() {
         {plan && <p className="mt-2 font-mono text-primary">{plan.title}</p>}
 
         {plan ? (
-          <WorkoutCarousel key={key} exercises={plan.list} />
+          <>
+            <WorkoutCarousel key={key} exercises={plan.list} />
+            <section className="mt-16 border-t border-border pt-10">
+              <h2 className="animate-in fade-in slide-in-from-top-4 text-sm uppercase tracking-[0.3em] text-muted-foreground duration-700">
+                Cooldown
+              </h2>
+              <p className="mt-2 font-mono text-primary">Every training day, after the workout</p>
+              <WorkoutCarousel key={`${key}-cooldown`} exercises={COOLDOWN} label="Cooldown exercises" />
+            </section>
+          </>
         ) : day === 0 ? (
           <p className="mt-8 text-lg text-muted-foreground">Recover, stretch, and come back stronger tomorrow. 💤</p>
         ) : null}

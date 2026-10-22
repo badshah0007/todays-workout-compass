@@ -22,7 +22,7 @@ export function WorkoutCarousel({ exercises, label = "Today's exercises" }: { ex
   }, [api]);
 
   return (
-    <Carousel setApi={setApi} opts={{ loop: true }} className="mt-8" aria-label="Today's exercises">
+    <Carousel setApi={setApi} opts={{ loop: true }} className="mt-8" aria-label={label}>
       <CarouselContent>
         {exercises.map((exercise, index) => (
           <CarouselItem key={exercise.name} aria-label={`${index + 1} of ${exercises.length}: ${exercise.name}`} aria-hidden={current !== index}>
