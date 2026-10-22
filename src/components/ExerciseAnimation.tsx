@@ -17,9 +17,25 @@ export type AnimKey = "cycling" | "chestPress" | "pullOver" | "pecFly" | "overhe
 const SRC: Record<AnimKey, string> = { cycling, chestPress, pullOver, pecFly, overheadExt, pushDown, catCow, hipFlexor, wallAngels, birdDog, deadHang, chinTucks };
 const SLOW: AnimKey[] = ["catCow", "hipFlexor", "wallAngels", "birdDog", "deadHang", "chinTucks"];
 
+// These photos came back as one pose repeated in both panels, so a crossfade would
+// look frozen. Show a single pose and let the frame drift instead.
+const HOLD: AnimKey[] = ["hipFlexor", "deadHang", "chinTucks"];
+
 export function ExerciseAnimation({ kind }: { kind: AnimKey }) {
   const src = SRC[kind];
   const speed = kind === "cycling" ? "0.9s" : SLOW.includes(kind) ? "3.2s" : "2.4s";
+
+  if (HOLD.includes(kind)) {
+    return (
+      <div className="relative h-full w-full overflow-hidden rounded-lg">
+        <div
+          className="ex-hold absolute inset-0 bg-cover bg-left"
+          style={{ backgroundImage: `url(${src})`, backgroundSize: "200% 100%" }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-full w-full overflow-hidden rounded-lg">
       <div className="absolute inset-0 bg-cover bg-left" style={{ backgroundImage: `url(${src})`, backgroundSize: "200% 100%" }} />

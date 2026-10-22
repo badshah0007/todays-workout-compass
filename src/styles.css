@@ -150,6 +150,18 @@
 }
 .ex-frame { animation: ex-rep 2.4s ease-in-out infinite; }
 
+/* Holds and stretches: the photo is one static pose, so let the frame drift slowly. */
+@keyframes ex-hold {
+  0% { transform: scale(1.02) translate(0, 0); }
+  50% { transform: scale(1.12) translate(-1.5%, 1.5%); }
+  100% { transform: scale(1.02) translate(0, 0); }
+}
+.ex-hold { animation: ex-hold 9s ease-in-out infinite; transform-origin: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ex-hold { animation: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ex-frame { animation: none; }
 }
