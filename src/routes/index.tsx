@@ -79,7 +79,7 @@ function Index() {
                   {i === 0 ? "🚴" : i}
                 </span>
                 {ex.anim && (
-                  <span className="h-24 w-24 shrink-0 rounded-lg bg-secondary p-1">
+                  <span className="block aspect-square w-28 shrink-0 sm:w-36">
                     <ExerciseAnimation kind={ex.anim} />
                   </span>
                 )}
