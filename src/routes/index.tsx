@@ -50,12 +50,12 @@ const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
 
 // Same cooldown for every training day, shown after the workout.
 const COOLDOWN: Ex[] = [
-  { name: "Cat–Cow", sets: "10 slow reps", cue: "Mobilize your spine without forcing the movement." },
-  { name: "Kneeling Hip-Flexor Stretch", sets: "2 × 30s each side", cue: "Keep your pelvis controlled and avoid excessive lower-back arching." },
-  { name: "Wall Angels", sets: "2 × 10 reps", cue: "Improve shoulder movement and upper-back positioning." },
-  { name: "Bird Dog", sets: "2 × 8 each side", cue: "Maintain a stable torso as you extend the opposite arm and leg." },
-  { name: "Dead Hang — optional", sets: "2 × 20–30s", cue: "Use a comfortable grip and stop if your shoulders hurt. Any decompression is temporary, not permanent height growth." },
-  { name: "Chin Tucks", sets: "2 × 10 reps", cue: "Gently draw your chin backward without tilting your head up or down." },
+  { name: "Cat–Cow", sets: "10 slow reps", anim: "catCow", cue: "Mobilize your spine without forcing the movement." },
+  { name: "Kneeling Hip-Flexor Stretch", sets: "2 × 30s each side", anim: "hipFlexor", cue: "Keep your pelvis controlled and avoid excessive lower-back arching." },
+  { name: "Wall Angels", sets: "2 × 10 reps", anim: "wallAngels", cue: "Improve shoulder movement and upper-back positioning." },
+  { name: "Bird Dog", sets: "2 × 8 each side", anim: "birdDog", cue: "Maintain a stable torso as you extend the opposite arm and leg." },
+  { name: "Dead Hang — optional", sets: "2 × 20–30s", anim: "deadHang", cue: "Use a comfortable grip and stop if your shoulders hurt. Any decompression is temporary, not permanent height growth." },
+  { name: "Chin Tucks", sets: "2 × 10 reps", anim: "chinTucks", cue: "Gently draw your chin backward without tilting your head up or down." },
 ];
 
 function Index() {
