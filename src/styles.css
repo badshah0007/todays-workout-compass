@@ -149,3 +149,7 @@
   95%, 100% { opacity: 0; }
 }
 .ex-frame { animation: ex-rep 2.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ex-frame { animation: none; }
+}
