@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
 });
 
 type Ex = { name: string; sets?: string; anim?: AnimKey; cue?: string };
-const WARMUP: Ex = { name: "Warmup — Cycling 10 min" };
+const WARMUP: Ex = { name: "Warmup — Cycling 10 min", anim: "cycling", cue: "Steady pace, light resistance to warm up." };
 const SETS = "15 · 12 · 10";
 
 const PLANS: Record<string, { title: string; focus: string; list: Ex[] }> = {
@@ -37,12 +37,27 @@ const PLANS: Record<string, { title: string; focus: string; list: Ex[] }> = {
   B: {
     title: "TUE – FRI",
     focus: "Back & Biceps",
-    list: [WARMUP, { name: "M/C Chin Up", sets: SETS }, { name: "M/C Lat Pull Down", sets: SETS }, { name: "D/B Pull Over", sets: SETS }, { name: "M/C Seated Row", sets: SETS }, { name: "D/B Curl", sets: SETS }, { name: "D/B Hammer Curl", sets: SETS }],
+    list: [
+      WARMUP,
+      { name: "M/C Chin Up", sets: SETS, anim: "chinUp", cue: "Use the assistance pad, pull your chest toward the handles, and lower with control." },
+      { name: "M/C Lat Pull Down", sets: SETS, anim: "latPullDown", cue: "Pull the bar toward your upper chest, keeping your torso steady; return slowly." },
+      { name: "D/B Pull Over", sets: SETS, anim: "pullOver", cue: "Arms slightly bent, lower weight behind head, pull back over chest." },
+      { name: "M/C Seated Row", sets: SETS, anim: "seatedRow", cue: "Keep your back neutral, pull the handle toward your ribs, and avoid rocking." },
+      { name: "D/B Curl", sets: SETS, anim: "curl", cue: "Keep elbows beside your torso, curl palms upward, and lower without swinging." },
+      { name: "D/B Hammer Curl", sets: SETS, anim: "hammerCurl", cue: "Keep palms facing inward and elbows steady as you raise and lower the dumbbells." },
+    ],
   },
   C: {
     title: "WED – SAT",
     focus: "Shoulders & Legs",
-    list: [WARMUP, { name: "M/C Shoulder Press", sets: SETS }, { name: "D/B Front Raise", sets: SETS }, { name: "Squat", sets: SETS }, { name: "Leg Press M/C", sets: SETS }, { name: "M/C Leg Curl", sets: SETS }],
+    list: [
+      WARMUP,
+      { name: "M/C Shoulder Press", sets: SETS, anim: "shoulderPress", cue: "Keep your back on the pad, press upward, and lower the handles with control." },
+      { name: "D/B Front Raise", sets: SETS, anim: "frontRaise", cue: "Raise the dumbbells to shoulder height with soft elbows; avoid swinging your torso." },
+      { name: "Squat", sets: SETS, anim: "squat", cue: "Keep heels grounded, bend hips and knees together, and stand back up with control." },
+      { name: "Leg Press M/C", sets: SETS, anim: "legPress", cue: "Keep hips against the pad, press through your feet, and avoid locking your knees." },
+      { name: "M/C Leg Curl", sets: SETS, anim: "legCurl", cue: "Align knees with the machine pivot, curl the roller upward, and lower slowly." },
+    ],
   },
 };
 const DAY_PLAN = [null, "A", "B", "C", "A", "B", "C"];

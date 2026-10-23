@@ -26,7 +26,7 @@ export function WorkoutCarousel({ exercises, label = "Today's exercises" }: { ex
       <CarouselContent>
         {exercises.map((exercise, index) => (
           <CarouselItem key={exercise.name} aria-label={`${index + 1} of ${exercises.length}: ${exercise.name}`} aria-hidden={current !== index}>
-            <div className="aspect-square w-full overflow-hidden rounded-lg border border-border bg-card sm:aspect-[4/3]">
+            <div className="aspect-square w-full overflow-hidden rounded-lg border border-border bg-card sm:aspect-[6/5]">
               {exercise.anim ? (
                 <ExerciseAnimation kind={exercise.anim} />
               ) : (

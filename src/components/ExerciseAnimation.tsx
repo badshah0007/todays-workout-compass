@@ -10,11 +10,21 @@ import wallAngels from "@/assets/ex-wallangels.jpg";
 import birdDog from "@/assets/ex-birddog.jpg";
 import deadHang from "@/assets/ex-deadhang.jpg";
 import chinTucks from "@/assets/ex-chintucks.jpg";
+import chinUp from "@/assets/ex-chinup.jpg";
+import latPullDown from "@/assets/ex-latpulldown.jpg";
+import seatedRow from "@/assets/ex-seatedrow.jpg";
+import curl from "@/assets/ex-curl.jpg";
+import hammerCurl from "@/assets/ex-hammercurl.jpg";
+import shoulderPress from "@/assets/ex-shoulderpress.jpg";
+import frontRaise from "@/assets/ex-frontraise.jpg";
+import squat from "@/assets/ex-squat.jpg";
+import legPress from "@/assets/ex-legpress.jpg";
+import legCurl from "@/assets/ex-legcurl.jpg";
 
-export type AnimKey = "cycling" | "chestPress" | "pullOver" | "pecFly" | "overheadExt" | "pushDown" | "catCow" | "hipFlexor" | "wallAngels" | "birdDog" | "deadHang" | "chinTucks";
+export type AnimKey = "cycling" | "chestPress" | "pullOver" | "pecFly" | "overheadExt" | "pushDown" | "catCow" | "hipFlexor" | "wallAngels" | "birdDog" | "deadHang" | "chinTucks" | "chinUp" | "latPullDown" | "seatedRow" | "curl" | "hammerCurl" | "shoulderPress" | "frontRaise" | "squat" | "legPress" | "legCurl";
 
 // Each image is a 2-panel sprite: left = start pose, right = end pose.
-const SRC: Record<AnimKey, string> = { cycling, chestPress, pullOver, pecFly, overheadExt, pushDown, catCow, hipFlexor, wallAngels, birdDog, deadHang, chinTucks };
+const SRC: Record<AnimKey, string> = { cycling, chestPress, pullOver, pecFly, overheadExt, pushDown, catCow, hipFlexor, wallAngels, birdDog, deadHang, chinTucks, chinUp, latPullDown, seatedRow, curl, hammerCurl, shoulderPress, frontRaise, squat, legPress, legCurl };
 const SLOW: AnimKey[] = ["catCow", "hipFlexor", "wallAngels", "birdDog", "deadHang", "chinTucks"];
 
 // These photos came back as one pose repeated in both panels, so a crossfade would
