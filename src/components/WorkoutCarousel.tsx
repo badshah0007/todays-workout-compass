@@ -5,13 +5,17 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 
 type Exercise = { name: string; sets?: string; anim?: AnimKey; cue?: string };
 
-export function WorkoutCarousel({ exercises, label = "Today's exercises" }: { exercises: Exercise[]; label?: string }) {
+export function WorkoutCarousel({ exercises, label = "Today's exercises", onSelectIndex }: { exercises: Exercise[]; label?: string; onSelectIndex?: (i: number) => void }) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
     if (!api) return;
-    const update = () => setCurrent(api.selectedScrollSnap());
+    const update = () => {
+      const i = api.selectedScrollSnap();
+      setCurrent(i);
+      onSelectIndex?.(i);
+    };
     update();
     api.on("select", update);
     api.on("reInit", update);

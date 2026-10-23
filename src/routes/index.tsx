@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { ClientOnly, createFileRoute } from "@tanstack/react-router";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { type AnimKey } from "@/components/ExerciseAnimation";
 import { WorkoutCarousel } from "@/components/WorkoutCarousel";
+
+const VirtualTrainer = lazy(() => import("@/components/VirtualTrainer"));
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -74,6 +76,7 @@ const COOLDOWN: Ex[] = [
 ];
 
 function Index() {
+  const [active, setActive] = useState(0);
   const [day, setDay] = useState<number | null>(null);
   useEffect(() => setDay(new Date().getDay()), []);
   const key = day === null ? null : DAY_PLAN[day];
@@ -92,7 +95,16 @@ function Index() {
 
         {plan ? (
           <>
-            <WorkoutCarousel key={key} exercises={plan.list} />
+            <WorkoutCarousel key={key} exercises={plan.list} onSelectIndex={setActive} />
+            <section className="mt-16 border-t border-border pt-10">
+              <h2 className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Virtual Trainer</h2>
+              <p className="mt-2 mb-6 font-mono text-primary">3D technique · follows the exercise above</p>
+              <ClientOnly fallback={<div className="aspect-square w-full rounded-lg border border-border bg-card sm:aspect-[6/5]" />}>
+                <Suspense fallback={<div className="aspect-square w-full rounded-lg border border-border bg-card sm:aspect-[6/5]" />}>
+                  <VirtualTrainer kind={plan.list[active]?.anim} name={plan.list[active]?.name ?? ""} cue={plan.list[active]?.cue} />
+                </Suspense>
+              </ClientOnly>
+            </section>
             <section className="mt-16 border-t border-border pt-10">
               <h2 className="animate-in fade-in slide-in-from-top-4 text-sm uppercase tracking-[0.3em] text-muted-foreground duration-700">
                 Cooldown
