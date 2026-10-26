@@ -121,11 +121,11 @@ type View = keyof typeof VIEWS;
 
 function CameraRig({ view }: { view: View }) {
   const { camera } = useThree();
-  useEffect(() => { camera.position.set(...VIEWS[view]); }, [view, camera]);
+  useEffect(() => { const [x, y, z] = VIEWS[view]; camera.position.set(x, y, z); }, [view, camera]);
   return null;
 }
 
-export default function VirtualTrainer({ kind, name, cue }: { kind?: AnimKey; name: string; cue?: string }) {
+export default function VirtualTrainer({ kind, name, cue }: { kind?: AnimKey | undefined; name: string; cue?: string | undefined }) {
   const [view, setView] = useState<View>("Front");
   const [spin, setSpin] = useState(false);
   const move = kind ? MOVES[kind] : undefined;
