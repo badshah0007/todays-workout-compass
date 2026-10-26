@@ -11,7 +11,8 @@ const SHIRT = "#151618";
 const SHORTS = "#2a2c31";
 const ACCENT = "#c6f432";
 
-type Rig = Record<string, THREE.Group | null>;
+type RigKey = "root" | "torso" | "head" | "armL" | "armR" | "foreL" | "foreR" | "legL" | "legR" | "shinL" | "shinR";
+type Rig = Partial<Record<RigKey, THREE.Group | null>>;
 
 function Limb({ len, r, color }: { len: number; r: number; color: string }) {
   return (
@@ -24,7 +25,7 @@ function Limb({ len, r, color }: { len: number; r: number; color: string }) {
 
 function Person({ move }: { move: Move }) {
   const rig = useRef<Rig>({});
-  const set = (k: string) => (g: THREE.Group | null) => { rig.current[k] = g; };
+  const set = (k: RigKey) => (g: THREE.Group | null) => { rig.current[k] = g; };
   const db = move.props?.includes("dumbbells");
 
   useFrame(({ clock }) => {
@@ -56,9 +57,9 @@ function Person({ move }: { move: Move }) {
   });
 
   const arm = (s: 1 | -1, k: "L" | "R") => (
-    <group ref={set("arm" + k)} position={[0.21 * s, 0.56, 0]}>
+    <group ref={set(`arm${k}`)} position={[0.21 * s, 0.56, 0]}>
       <Limb len={0.3} r={0.055} color={SKIN} />
-      <group ref={set("fore" + k)} position={[0, -0.3, 0]}>
+      <group ref={set(`fore${k}`)} position={[0, -0.3, 0]}>
         <Limb len={0.28} r={0.045} color={SKIN} />
         <mesh position={[0, -0.3, 0]}><sphereGeometry args={[0.045, 12, 12]} /><meshStandardMaterial color={SKIN} /></mesh>
         {db && (
@@ -71,9 +72,9 @@ function Person({ move }: { move: Move }) {
     </group>
   );
   const leg = (s: 1 | -1, k: "L" | "R") => (
-    <group ref={set("leg" + k)} position={[0.1 * s, 0, 0]}>
+    <group ref={set(`leg${k}`)} position={[0.1 * s, 0, 0]}>
       <Limb len={0.45} r={0.075} color={SHORTS} />
-      <group ref={set("shin" + k)} position={[0, -0.45, 0]}>
+      <group ref={set(`shin${k}`)} position={[0, -0.45, 0]}>
         <Limb len={0.45} r={0.058} color={SKIN} />
         <mesh position={[0, -0.47, 0.06]} castShadow><boxGeometry args={[0.1, 0.06, 0.24]} /><meshStandardMaterial color="#eee" /></mesh>
       </group>
@@ -121,11 +122,11 @@ type View = keyof typeof VIEWS;
 
 function CameraRig({ view }: { view: View }) {
   const { camera } = useThree();
-  useEffect(() => { camera.position.set(...VIEWS[view]); }, [view, camera]);
+  useEffect(() => { const [x, y, z] = VIEWS[view]; camera.position.set(x, y, z); }, [view, camera]);
   return null;
 }
 
-export default function VirtualTrainer({ kind, name, cue }: { kind?: AnimKey; name: string; cue?: string }) {
+export default function VirtualTrainer({ kind, name, cue }: { kind?: AnimKey | undefined; name: string; cue?: string | undefined }) {
   const [view, setView] = useState<View>("Front");
   const [spin, setSpin] = useState(false);
   const move = kind ? MOVES[kind] : undefined;
