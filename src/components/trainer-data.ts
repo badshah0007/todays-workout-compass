@@ -40,3 +40,36 @@ export const MOVES: Record<AnimKey, Move> = {
   legPress: { setup: "sit", secs: 2.8, props: ["bench"], a: { ...SIT, lean: -30, hip: 120, knee: 110 }, b: { ...SIT, lean: -30, hip: 75, knee: 10 }, muscles: "Quads · Glutes · Hamstrings", mistake: "Locking the knees or hips lifting off the pad." },
   legCurl: { setup: "sit", secs: 2.6, props: ["bench"], a: { ...SIT, knee: 5 }, b: { ...SIT, knee: 100 }, muscles: "Hamstrings", mistake: "Lifting the hips to swing the weight." },
 };
+
+// Body regions the 3D trainer can light up (mapped to skeleton bones in VirtualTrainer).
+export type Region = "chest" | "upperBack" | "shoulders" | "upperArms" | "forearms" | "core" | "glutes" | "thighs" | "calves" | "neck";
+export const REGION_LABEL: Record<Region, string> = {
+  chest: "Chest", upperBack: "Upper back / lats", shoulders: "Shoulders", upperArms: "Arms (biceps / triceps)",
+  forearms: "Forearms / grip", core: "Core", glutes: "Glutes / hips", thighs: "Quads / hamstrings", calves: "Calves", neck: "Neck",
+};
+
+// p = primary drivers, s = secondary stabilisers. effortAtB=false when pose b is the easy/lowered end (e.g. squat bottom).
+export const FOCUS: Record<AnimKey, { p: Region[]; s: Region[]; effortAtB?: boolean }> = {
+  cycling: { p: ["thighs"], s: ["glutes", "calves"] },
+  chestPress: { p: ["chest"], s: ["shoulders", "upperArms"] },
+  pullOver: { p: ["upperBack", "chest"], s: ["core", "upperArms"], effortAtB: true },
+  pecFly: { p: ["chest"], s: ["shoulders"] },
+  overheadExt: { p: ["upperArms"], s: ["shoulders", "core"] },
+  pushDown: { p: ["upperArms"], s: ["forearms"] },
+  catCow: { p: ["core", "upperBack"], s: ["neck"] },
+  hipFlexor: { p: ["thighs", "glutes"], s: ["core"] },
+  wallAngels: { p: ["upperBack", "shoulders"], s: ["core"] },
+  birdDog: { p: ["core", "glutes"], s: ["upperBack", "shoulders"] },
+  deadHang: { p: ["forearms", "upperBack"], s: ["shoulders"] },
+  chinTucks: { p: ["neck"], s: ["upperBack"] },
+  chinUp: { p: ["upperBack", "upperArms"], s: ["forearms", "core"] },
+  latPullDown: { p: ["upperBack"], s: ["upperArms", "shoulders"] },
+  seatedRow: { p: ["upperBack"], s: ["upperArms", "shoulders"] },
+  curl: { p: ["upperArms"], s: ["forearms"] },
+  hammerCurl: { p: ["upperArms", "forearms"], s: ["shoulders"] },
+  shoulderPress: { p: ["shoulders"], s: ["upperArms", "upperBack"] },
+  frontRaise: { p: ["shoulders"], s: ["upperBack", "core"] },
+  squat: { p: ["thighs", "glutes"], s: ["core", "calves"], effortAtB: false },
+  legPress: { p: ["thighs", "glutes"], s: ["calves"] },
+  legCurl: { p: ["thighs"], s: ["calves"] },
+};
