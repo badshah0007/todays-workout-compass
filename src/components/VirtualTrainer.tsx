@@ -2,6 +2,7 @@ import { Suspense, useEffect, useMemo, useRef, useState, Component, type ReactNo
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer, OrbitControls, ContactShadows, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
+import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import type { AnimKey } from "@/components/ExerciseAnimation";
 import { FOCUS, MOVES, REGION_LABEL, type Move, type Pose, type Region } from "@/components/trainer-data";
 
@@ -88,7 +89,8 @@ type Rigged = {
 function useRiggedTrainer(): Rigged {
   const gltf = useGLTF(MODEL_URL);
   return useMemo(() => {
-    const scene = gltf.scene;
+    // Clone so repeated memo runs (StrictMode / remounts) never share or re-scale one scene.
+    const scene = cloneSkinned(gltf.scene);
     let mesh: THREE.SkinnedMesh | undefined;
     scene.traverse((o) => { if ((o as THREE.SkinnedMesh).isSkinnedMesh) mesh = o as THREE.SkinnedMesh; });
     if (!mesh) throw new Error("Trainer model has no skinned mesh");
@@ -138,7 +140,6 @@ function useRiggedTrainer(): Rigged {
     mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = false;
 
     const root = new THREE.Group();
-    (globalThis as any).__tr = { mesh, scene };
     root.add(scene);
     return { root, mesh, bones, rest, hipOffset, glow, centerZ: (gb.max.z + gb.min.z) / 2, scale };
   }, [gltf]);
