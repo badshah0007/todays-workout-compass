@@ -103,7 +103,7 @@ function useRiggedTrainer(): Rigged {
     // Vertex colors (skin / tank top / shorts) from dominant bone weight
     const geo = mesh.geometry;
     geo.computeVertexNormals();
-    const pos = geo.attributes.position!, si = geo.attributes.skinIndex!, sw = geo.attributes.skinWeight!;
+    const pos = geo.attributes["position"]!, si = geo.attributes["skinIndex"]!, sw = geo.attributes["skinWeight"]!;
     const names = mesh.skeleton.bones.map((b) => b.name);
     const gb = new THREE.Box3().setFromBufferAttribute(pos as THREE.BufferAttribute);
     const h = gb.max.y - gb.min.y;
@@ -143,8 +143,8 @@ function useRiggedTrainer(): Rigged {
 
 function paintRegions(r: Rigged, focus: { p: Region[]; s: Region[] }) {
   const geo = r.mesh.geometry;
-  const attr = geo.attributes.aGlow as THREE.BufferAttribute;
-  const pos = geo.attributes.position!, si = geo.attributes.skinIndex!, sw = geo.attributes.skinWeight!;
+  const attr = geo.attributes["aGlow"] as THREE.BufferAttribute;
+  const pos = geo.attributes["position"]!, si = geo.attributes["skinIndex"]!, sw = geo.attributes["skinWeight"]!;
   const names = r.mesh.skeleton.bones.map((b) => b.name);
   for (let i = 0; i < pos.count; i++) {
     let g = 0;
@@ -259,9 +259,9 @@ function CameraRig({ view }: { view: View }) {
 }
 
 class ModelBoundary extends Component<{ children: ReactNode }, { err: boolean }> {
-  state = { err: false };
+  override state = { err: false };
   static getDerivedStateFromError() { return { err: true }; }
-  render() {
+  override render() {
     return this.state.err
       ? <Html center><p className="whitespace-nowrap rounded-md bg-background/90 px-3 py-2 font-mono text-xs text-muted-foreground">Couldn't load the 3D trainer. Refresh to retry.</p></Html>
       : this.props.children;
