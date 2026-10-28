@@ -124,7 +124,7 @@ function useRiggedTrainer(): Rigged {
     const glow = { value: 0 };
     const mat = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.48, metalness: 0, sheen: 0.6, sheenRoughness: 0.5, sheenColor: new THREE.Color("#ffd9c2"), clearcoat: 0.15, clearcoatRoughness: 0.6 });
     mat.onBeforeCompile = (sh) => {
-      sh.uniforms.uGlow = glow;
+      sh.uniforms["uGlow"] = glow;
       sh.vertexShader = sh.vertexShader
         .replace("#include <common>", "#include <common>\nattribute float aGlow;\nvarying float vGlow;")
         .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGlow = aGlow;");
