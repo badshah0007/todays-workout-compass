@@ -2,10 +2,13 @@ import { Suspense, useEffect, useMemo, useRef, useState, Component, type ReactNo
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer, OrbitControls, ContactShadows, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
+import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import type { AnimKey } from "@/components/ExerciseAnimation";
 import { FOCUS, MOVES, REGION_LABEL, type Move, type Pose, type Region } from "@/components/trainer-data";
 
 const D = Math.PI / 180;
+// GLTFLoader strips dots from node names ("spine.001" -> "spine001").
+const norm = (s: string) => s.replace(/\./g, "");
 const MODEL_URL = "/models/trainer.glb"; // CC0 male base mesh (BoQsc / orange-juice-games), Rigify skeleton
 const SKIN = new THREE.Color("#b9825f");
 const SHIRT = new THREE.Color("#141518");
@@ -80,13 +83,14 @@ const REGION_BONES: Record<Region, { bones: string[]; zSide?: 1 | -1 }> = {
 
 type Rigged = {
   root: THREE.Group; mesh: THREE.SkinnedMesh; bones: Record<string, THREE.Bone>; rest: Record<string, THREE.Quaternion>;
-  hipOffset: THREE.Vector3; glow: { value: number }; centerZ: number; scale: number;
+  hipOffset: THREE.Vector3; glow: { value: number }; base: Float32Array; centerZ: number; scale: number;
 };
 
 function useRiggedTrainer(): Rigged {
   const gltf = useGLTF(MODEL_URL);
   return useMemo(() => {
-    const scene = gltf.scene;
+    // Clone so repeated memo runs (StrictMode / remounts) never share or re-scale one scene.
+    const scene = cloneSkinned(gltf.scene);
     let mesh: THREE.SkinnedMesh | undefined;
     scene.traverse((o) => { if ((o as THREE.SkinnedMesh).isSkinnedMesh) mesh = o as THREE.SkinnedMesh; });
     if (!mesh) throw new Error("Trainer model has no skinned mesh");
@@ -94,17 +98,18 @@ function useRiggedTrainer(): Rigged {
     const scale = 1.78 / (box.max.y - box.min.y);
     scene.scale.setScalar(scale);
     scene.position.set(0, 0, 0);
+    scene.rotation.set(0, -Math.PI / 2, 0); // source rig faces +X; turn it to face +Z like the guide
     scene.updateMatrixWorld(true);
 
     const bones: Record<string, THREE.Bone> = {}, rest: Record<string, THREE.Quaternion> = {};
-    mesh.skeleton.bones.forEach((b) => { bones[b.name] = b; rest[b.name] = b.quaternion.clone(); });
-    const hipOffset = bones["spine"]!.getWorldPosition(new THREE.Vector3());
+    mesh.skeleton.bones.forEach((b) => { bones[norm(b.name)] = b; rest[norm(b.name)] = b.quaternion.clone(); });
+    const hipOffset = bones[norm("spine")]!.getWorldPosition(new THREE.Vector3());
 
     // Vertex colors (skin / tank top / shorts) from dominant bone weight
     const geo = mesh.geometry;
     geo.computeVertexNormals();
-    const pos = geo.attributes.position!, si = geo.attributes.skinIndex!, sw = geo.attributes.skinWeight!;
-    const names = mesh.skeleton.bones.map((b) => b.name);
+    const pos = geo.attributes["position"]!, si = geo.attributes["skinIndex"]!, sw = geo.attributes["skinWeight"]!;
+    const names = mesh.skeleton.bones.map((b) => norm(b.name));
     const gb = new THREE.Box3().setFromBufferAttribute(pos as THREE.BufferAttribute);
     const h = gb.max.y - gb.min.y;
     const colors = new Float32Array(pos.count * 3);
@@ -114,38 +119,29 @@ function useRiggedTrainer(): Rigged {
       const n = names[best] ?? "";
       const y = (pos.getY(i) - gb.min.y) / h;
       let c = SKIN;
-      if (/^spine\.00[123]$/.test(n) && y < 0.8) c = SHIRT;
+      if (/^spine00[123]$/.test(n) && y < 0.8) c = SHIRT;
       else if ((n === "spine" || n.startsWith("pelvis") || n.startsWith("thigh")) && y > 0.42) c = SHORTS;
       colors.set([c.r, c.g, c.b], i * 3);
     }
-    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(colors.slice(), 3));
     geo.setAttribute("aGlow", new THREE.BufferAttribute(new Float32Array(pos.count), 1));
 
     const glow = { value: 0 };
     const mat = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.48, metalness: 0, sheen: 0.6, sheenRoughness: 0.5, sheenColor: new THREE.Color("#ffd9c2"), clearcoat: 0.15, clearcoatRoughness: 0.6 });
-    mat.onBeforeCompile = (sh) => {
-      sh.uniforms.uGlow = glow;
-      sh.vertexShader = sh.vertexShader
-        .replace("#include <common>", "#include <common>\nattribute float aGlow;\nvarying float vGlow;")
-        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGlow = aGlow;");
-      sh.fragmentShader = sh.fragmentShader
-        .replace("#include <common>", "#include <common>\nuniform float uGlow;\nvarying float vGlow;")
-        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(0.62, 0.86, 0.12) * vGlow * uGlow;\ndiffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.78, 0.96, 0.2), vGlow * uGlow * 0.35);");
-    };
     mesh.material = mat;
     mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = false;
 
     const root = new THREE.Group();
     root.add(scene);
-    return { root, mesh, bones, rest, hipOffset, glow, centerZ: (gb.max.z + gb.min.z) / 2, scale };
+    return { root, mesh, bones, rest, hipOffset, glow, base: colors, centerZ: (gb.max.z + gb.min.z) / 2, scale };
   }, [gltf]);
 }
 
 function paintRegions(r: Rigged, focus: { p: Region[]; s: Region[] }) {
   const geo = r.mesh.geometry;
-  const attr = geo.attributes.aGlow as THREE.BufferAttribute;
-  const pos = geo.attributes.position!, si = geo.attributes.skinIndex!, sw = geo.attributes.skinWeight!;
-  const names = r.mesh.skeleton.bones.map((b) => b.name);
+  const attr = geo.attributes["aGlow"] as THREE.BufferAttribute;
+  const pos = geo.attributes["position"]!, si = geo.attributes["skinIndex"]!, sw = geo.attributes["skinWeight"]!;
+  const names = r.mesh.skeleton.bones.map((b) => norm(b.name));
   for (let i = 0; i < pos.count; i++) {
     let g = 0;
     const z = pos.getZ(i) - r.centerZ;
@@ -154,7 +150,7 @@ function paintRegions(r: Rigged, focus: { p: Region[]; s: Region[] }) {
         const def = REGION_BONES[reg];
         if (def.zSide && Math.sign(z) !== def.zSide) continue;
         let w = 0;
-        for (let k = 0; k < 4; k++) if (def.bones.includes(names[si.getComponent(i, k)] ?? "")) w += sw.getComponent(i, k);
+        for (let k = 0; k < 4; k++) if (def.bones.map(norm).includes(names[si.getComponent(i, k)] ?? "")) w += sw.getComponent(i, k);
         g = Math.max(g, Math.min(1, w * 1.3) * level);
       }
     }
@@ -181,6 +177,16 @@ function Trainer({ move, kind, pb }: { move: Move; kind: AnimKey; pb: React.Muta
 
     const effort = focus.effortAtB === false ? 1 - t : t;
     r.glow.value = 0.35 + 0.65 * effort;
+    // tint active muscles toward lime, brighter as the muscle works harder
+    const col = r.mesh.geometry.attributes["color"] as THREE.BufferAttribute, ga = r.mesh.geometry.attributes["aGlow"] as THREE.BufferAttribute;
+    const arr = col.array as Float32Array, gl = r.glow.value;
+    for (let i = 0; i < ga.count; i++) {
+      const a = ga.getX(i) * gl;
+      arr[i * 3] = r.base[i * 3]! * (1 - a * 0.6) + 0.55 * a;
+      arr[i * 3 + 1] = r.base[i * 3 + 1]! * (1 - a * 0.6) + 0.95 * a;
+      arr[i * 3 + 2] = r.base[i * 3 + 2]! * (1 - a * 0.6) + 0.1 * a;
+    }
+    col.needsUpdate = true;
 
     // place hips at the guide root
     r.root.position.copy(guide.root.position).sub(r.hipOffset);
@@ -189,24 +195,24 @@ function Trainer({ move, kind, pb }: { move: Move; kind: AnimKey; pb: React.Muta
     const torsoUp = dirOf(guide.torso, UP, new THREE.Vector3());
     const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(guide.torso.getWorldQuaternion(new THREE.Quaternion()));
     const hipsUp = dirOf(guide.root, UP, new THREE.Vector3()).lerp(torsoUp, 0.35).normalize();
-    aim(B["spine"]!, R["spine"]!, hipsUp);
+    aim(B[norm("spine")]!, R[norm("spine")]!, hipsUp);
     for (const [n, f] of [["spine.001", 0.6], ["spine.002", 0.85], ["spine.003", 1]] as const)
-      aim(B[n]!, R[n]!, tmp.copy(hipsUp).lerp(torsoUp, f).normalize());
+      aim(B[norm(n)]!, R[norm(n)]!, tmp.copy(hipsUp).lerp(torsoUp, f).normalize());
     const headDir = new THREE.Vector3().copy(torsoUp).addScaledVector(fwd, headZ * 4).normalize();
-    aim(B["spine.004"]!, R["spine.004"]!, headDir);
-    aim(B["spine.005"]!, R["spine.005"]!, headDir);
+    aim(B[norm("spine.004")]!, R[norm("spine.004")]!, headDir);
+    aim(B[norm("spine.005")]!, R[norm("spine.005")]!, headDir);
     for (const s of ["L", "R"] as const) {
-      B[`shoulder.${s}`]!.updateMatrixWorld(true);
-      aim(B[`upper_arm.${s}`]!, R[`upper_arm.${s}`]!, dirOf(guide[`arm${s}`], DOWN, tmp));
-      aim(B[`forearm.${s}`]!, R[`forearm.${s}`]!, dirOf(guide[`fore${s}`], DOWN, tmp));
-      B[`pelvis.${s}`]?.updateMatrixWorld(true);
-      aim(B[`thigh.${s}`]!, R[`thigh.${s}`]!, dirOf(guide[`leg${s}`], DOWN, tmp));
-      aim(B[`shin.${s}`]!, R[`shin.${s}`]!, dirOf(guide[`shin${s}`], DOWN, tmp));
+      B[norm(`shoulder.${s}`)]!.updateMatrixWorld(true);
+      aim(B[norm(`upper_arm.${s}`)]!, R[norm(`upper_arm.${s}`)]!, dirOf(guide[`arm${s}`], DOWN, tmp));
+      aim(B[norm(`forearm.${s}`)]!, R[norm(`forearm.${s}`)]!, dirOf(guide[`fore${s}`], DOWN, tmp));
+      B[norm(`pelvis.${s}`)]?.updateMatrixWorld(true);
+      aim(B[norm(`thigh.${s}`)]!, R[norm(`thigh.${s}`)]!, dirOf(guide[`leg${s}`], DOWN, tmp));
+      aim(B[norm(`shin.${s}`)]!, R[norm(`shin.${s}`)]!, dirOf(guide[`shin${s}`], DOWN, tmp));
     }
     if (db) {
       for (const [ref, s] of [[dbL, "L"], [dbR, "R"]] as const) {
         const g = ref.current; if (!g) continue;
-        B[`hand.${s}`]!.getWorldPosition(g.position);
+        B[norm(`hand.${s}`)]!.getWorldPosition(g.position);
         g.quaternion.copy(guide[`fore${s}`].getWorldQuaternion(_q));
       }
     }
@@ -259,9 +265,9 @@ function CameraRig({ view }: { view: View }) {
 }
 
 class ModelBoundary extends Component<{ children: ReactNode }, { err: boolean }> {
-  state = { err: false };
+  override state = { err: false };
   static getDerivedStateFromError() { return { err: true }; }
-  render() {
+  override render() {
     return this.state.err
       ? <Html center><p className="whitespace-nowrap rounded-md bg-background/90 px-3 py-2 font-mono text-xs text-muted-foreground">Couldn't load the 3D trainer. Refresh to retry.</p></Html>
       : this.props.children;
@@ -324,7 +330,7 @@ export default function VirtualTrainer({ kind, name, cue }: { kind?: AnimKey | u
         <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
           {(Object.keys(VIEWS) as View[]).map((v) => <button key={v} onClick={() => setView(v)} className={btn(view === v)}>{v}</button>)}
         </div>
-        <button onClick={() => setSpin((s) => !s)} className={`absolute right-3 top-3 ${btn(spin)}`}>360°</button>
+        <button onClick={() => setSpin((s) => !s)} className={`absolute bottom-3 right-3 ${btn(spin)}`}>360°</button>
         <p className="pointer-events-none absolute bottom-3 left-3 rounded bg-background/70 px-2 py-1 font-mono text-xs text-primary">{phaseLabel(ui.phase, focus.effortAtB !== false)}</p>
       </div>
 
