@@ -174,6 +174,7 @@ function Trainer({ move, kind, pb }: { move: Move; kind: AnimKey; pb: React.Muta
   const focus = FOCUS[kind];
   const db = move.props?.includes("dumbbells");
   useEffect(() => { paintRegions(r, focus); }, [r, focus]);
+  useEffect(() => { (globalThis as any).__tr = r; }, [r]);
 
   useFrame((_, raw) => {
     const dt = Math.min(raw, 0.05);
