@@ -6,6 +6,8 @@ import type { AnimKey } from "@/components/ExerciseAnimation";
 import { FOCUS, MOVES, REGION_LABEL, type Move, type Pose, type Region } from "@/components/trainer-data";
 
 const D = Math.PI / 180;
+// GLTFLoader strips dots from node names ("spine.001" -> "spine001").
+const norm = (s: string) => s.replace(/\./g, "");
 const MODEL_URL = "/models/trainer.glb"; // CC0 male base mesh (BoQsc / orange-juice-games), Rigify skeleton
 const SKIN = new THREE.Color("#b9825f");
 const SHIRT = new THREE.Color("#141518");
@@ -97,14 +99,14 @@ function useRiggedTrainer(): Rigged {
     scene.updateMatrixWorld(true);
 
     const bones: Record<string, THREE.Bone> = {}, rest: Record<string, THREE.Quaternion> = {};
-    mesh.skeleton.bones.forEach((b) => { bones[b.name] = b; rest[b.name] = b.quaternion.clone(); });
-    const hipOffset = bones["spine"]!.getWorldPosition(new THREE.Vector3());
+    mesh.skeleton.bones.forEach((b) => { bones[norm(b.name)] = b; rest[norm(b.name)] = b.quaternion.clone(); });
+    const hipOffset = bones[norm("spine")]!.getWorldPosition(new THREE.Vector3());
 
     // Vertex colors (skin / tank top / shorts) from dominant bone weight
     const geo = mesh.geometry;
     geo.computeVertexNormals();
     const pos = geo.attributes["position"]!, si = geo.attributes["skinIndex"]!, sw = geo.attributes["skinWeight"]!;
-    const names = mesh.skeleton.bones.map((b) => b.name);
+    const names = mesh.skeleton.bones.map((b) => norm(b.name));
     const gb = new THREE.Box3().setFromBufferAttribute(pos as THREE.BufferAttribute);
     const h = gb.max.y - gb.min.y;
     const colors = new Float32Array(pos.count * 3);
@@ -114,7 +116,7 @@ function useRiggedTrainer(): Rigged {
       const n = names[best] ?? "";
       const y = (pos.getY(i) - gb.min.y) / h;
       let c = SKIN;
-      if (/^spine\.00[123]$/.test(n) && y < 0.8) c = SHIRT;
+      if (/^spine00[123]$/.test(n) && y < 0.8) c = SHIRT;
       else if ((n === "spine" || n.startsWith("pelvis") || n.startsWith("thigh")) && y > 0.42) c = SHORTS;
       colors.set([c.r, c.g, c.b], i * 3);
     }
@@ -145,7 +147,7 @@ function paintRegions(r: Rigged, focus: { p: Region[]; s: Region[] }) {
   const geo = r.mesh.geometry;
   const attr = geo.attributes["aGlow"] as THREE.BufferAttribute;
   const pos = geo.attributes["position"]!, si = geo.attributes["skinIndex"]!, sw = geo.attributes["skinWeight"]!;
-  const names = r.mesh.skeleton.bones.map((b) => b.name);
+  const names = r.mesh.skeleton.bones.map((b) => norm(b.name));
   for (let i = 0; i < pos.count; i++) {
     let g = 0;
     const z = pos.getZ(i) - r.centerZ;
@@ -154,7 +156,7 @@ function paintRegions(r: Rigged, focus: { p: Region[]; s: Region[] }) {
         const def = REGION_BONES[reg];
         if (def.zSide && Math.sign(z) !== def.zSide) continue;
         let w = 0;
-        for (let k = 0; k < 4; k++) if (def.bones.includes(names[si.getComponent(i, k)] ?? "")) w += sw.getComponent(i, k);
+        for (let k = 0; k < 4; k++) if (def.bones.map(norm).includes(names[si.getComponent(i, k)] ?? "")) w += sw.getComponent(i, k);
         g = Math.max(g, Math.min(1, w * 1.3) * level);
       }
     }
@@ -189,24 +191,24 @@ function Trainer({ move, kind, pb }: { move: Move; kind: AnimKey; pb: React.Muta
     const torsoUp = dirOf(guide.torso, UP, new THREE.Vector3());
     const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(guide.torso.getWorldQuaternion(new THREE.Quaternion()));
     const hipsUp = dirOf(guide.root, UP, new THREE.Vector3()).lerp(torsoUp, 0.35).normalize();
-    aim(B["spine"]!, R["spine"]!, hipsUp);
+    aim(B[norm("spine")]!, R[norm("spine")]!, hipsUp);
     for (const [n, f] of [["spine.001", 0.6], ["spine.002", 0.85], ["spine.003", 1]] as const)
-      aim(B[n]!, R[n]!, tmp.copy(hipsUp).lerp(torsoUp, f).normalize());
+      aim(B[norm(n)]!, R[norm(n)]!, tmp.copy(hipsUp).lerp(torsoUp, f).normalize());
     const headDir = new THREE.Vector3().copy(torsoUp).addScaledVector(fwd, headZ * 4).normalize();
-    aim(B["spine.004"]!, R["spine.004"]!, headDir);
-    aim(B["spine.005"]!, R["spine.005"]!, headDir);
+    aim(B[norm("spine.004")]!, R[norm("spine.004")]!, headDir);
+    aim(B[norm("spine.005")]!, R[norm("spine.005")]!, headDir);
     for (const s of ["L", "R"] as const) {
-      B[`shoulder.${s}`]!.updateMatrixWorld(true);
-      aim(B[`upper_arm.${s}`]!, R[`upper_arm.${s}`]!, dirOf(guide[`arm${s}`], DOWN, tmp));
-      aim(B[`forearm.${s}`]!, R[`forearm.${s}`]!, dirOf(guide[`fore${s}`], DOWN, tmp));
-      B[`pelvis.${s}`]?.updateMatrixWorld(true);
-      aim(B[`thigh.${s}`]!, R[`thigh.${s}`]!, dirOf(guide[`leg${s}`], DOWN, tmp));
-      aim(B[`shin.${s}`]!, R[`shin.${s}`]!, dirOf(guide[`shin${s}`], DOWN, tmp));
+      B[norm(`shoulder.${s}`)]!.updateMatrixWorld(true);
+      aim(B[norm(`upper_arm.${s}`)]!, R[norm(`upper_arm.${s}`)]!, dirOf(guide[`arm${s}`], DOWN, tmp));
+      aim(B[norm(`forearm.${s}`)]!, R[norm(`forearm.${s}`)]!, dirOf(guide[`fore${s}`], DOWN, tmp));
+      B[norm(`pelvis.${s}`)]?.updateMatrixWorld(true);
+      aim(B[norm(`thigh.${s}`)]!, R[norm(`thigh.${s}`)]!, dirOf(guide[`leg${s}`], DOWN, tmp));
+      aim(B[norm(`shin.${s}`)]!, R[norm(`shin.${s}`)]!, dirOf(guide[`shin${s}`], DOWN, tmp));
     }
     if (db) {
       for (const [ref, s] of [[dbL, "L"], [dbR, "R"]] as const) {
         const g = ref.current; if (!g) continue;
-        B[`hand.${s}`]!.getWorldPosition(g.position);
+        B[norm(`hand.${s}`)]!.getWorldPosition(g.position);
         g.quaternion.copy(guide[`fore${s}`].getWorldQuaternion(_q));
       }
     }
