@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Keep exercise carousel presentation in a shared component using the existing carousel controls; daily schedule selection stays in the index route so presentation changes do not alter routines.
+- The Virtual Trainer skins a CC0 rigged GLB (public/models/trainer.glb) and drives its bones from an invisible guide skeleton built from trainer-data pose angles; add exercises by adding pose/focus data, not new animation files, so every move shares one rig.

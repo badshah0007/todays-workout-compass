@@ -330,7 +330,7 @@ export default function VirtualTrainer({ kind, name, cue }: { kind?: AnimKey | u
         <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
           {(Object.keys(VIEWS) as View[]).map((v) => <button key={v} onClick={() => setView(v)} className={btn(view === v)}>{v}</button>)}
         </div>
-        <button onClick={() => setSpin((s) => !s)} className={`absolute right-3 top-3 ${btn(spin)}`}>360°</button>
+        <button onClick={() => setSpin((s) => !s)} className={`absolute bottom-3 right-3 ${btn(spin)}`}>360°</button>
         <p className="pointer-events-none absolute bottom-3 left-3 rounded bg-background/70 px-2 py-1 font-mono text-xs text-primary">{phaseLabel(ui.phase, focus.effortAtB !== false)}</p>
       </div>
 
