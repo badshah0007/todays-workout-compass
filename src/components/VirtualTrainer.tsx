@@ -138,6 +138,7 @@ function useRiggedTrainer(): Rigged {
     mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = false;
 
     const root = new THREE.Group();
+    (globalThis as any).__tr = { mesh, scene };
     root.add(scene);
     return { root, mesh, bones, rest, hipOffset, glow, centerZ: (gb.max.z + gb.min.z) / 2, scale };
   }, [gltf]);
