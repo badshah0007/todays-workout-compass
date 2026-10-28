@@ -83,7 +83,7 @@ const REGION_BONES: Record<Region, { bones: string[]; zSide?: 1 | -1 }> = {
 
 type Rigged = {
   root: THREE.Group; mesh: THREE.SkinnedMesh; bones: Record<string, THREE.Bone>; rest: Record<string, THREE.Quaternion>;
-  hipOffset: THREE.Vector3; glow: { value: number }; centerZ: number; scale: number;
+  hipOffset: THREE.Vector3; glow: { value: number }; base: Float32Array; centerZ: number; scale: number;
 };
 
 function useRiggedTrainer(): Rigged {
@@ -98,6 +98,7 @@ function useRiggedTrainer(): Rigged {
     const scale = 1.78 / (box.max.y - box.min.y);
     scene.scale.setScalar(scale);
     scene.position.set(0, 0, 0);
+    scene.rotation.set(0, -Math.PI / 2, 0); // source rig faces +X; turn it to face +Z like the guide
     scene.updateMatrixWorld(true);
 
     const bones: Record<string, THREE.Bone> = {}, rest: Record<string, THREE.Quaternion> = {};
@@ -122,26 +123,17 @@ function useRiggedTrainer(): Rigged {
       else if ((n === "spine" || n.startsWith("pelvis") || n.startsWith("thigh")) && y > 0.42) c = SHORTS;
       colors.set([c.r, c.g, c.b], i * 3);
     }
-    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(colors.slice(), 3));
     geo.setAttribute("aGlow", new THREE.BufferAttribute(new Float32Array(pos.count), 1));
 
     const glow = { value: 0 };
     const mat = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.48, metalness: 0, sheen: 0.6, sheenRoughness: 0.5, sheenColor: new THREE.Color("#ffd9c2"), clearcoat: 0.15, clearcoatRoughness: 0.6 });
-    mat.onBeforeCompile = (sh) => {
-      sh.uniforms["uGlow"] = glow;
-      sh.vertexShader = sh.vertexShader
-        .replace("#include <common>", "#include <common>\nattribute float aGlow;\nvarying float vGlow;")
-        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGlow = aGlow;");
-      sh.fragmentShader = sh.fragmentShader
-        .replace("#include <common>", "#include <common>\nuniform float uGlow;\nvarying float vGlow;")
-        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(0.62, 0.86, 0.12) * vGlow * uGlow;\ndiffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.78, 0.96, 0.2), vGlow * uGlow * 0.35);");
-    };
     mesh.material = mat;
     mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = false;
 
     const root = new THREE.Group();
     root.add(scene);
-    return { root, mesh, bones, rest, hipOffset, glow, centerZ: (gb.max.z + gb.min.z) / 2, scale };
+    return { root, mesh, bones, rest, hipOffset, glow, base: colors, centerZ: (gb.max.z + gb.min.z) / 2, scale };
   }, [gltf]);
 }
 
@@ -186,6 +178,16 @@ function Trainer({ move, kind, pb }: { move: Move; kind: AnimKey; pb: React.Muta
 
     const effort = focus.effortAtB === false ? 1 - t : t;
     r.glow.value = 0.35 + 0.65 * effort;
+    // tint active muscles toward lime, brighter as the muscle works harder
+    const col = r.mesh.geometry.attributes["color"] as THREE.BufferAttribute, ga = r.mesh.geometry.attributes["aGlow"] as THREE.BufferAttribute;
+    const arr = col.array as Float32Array, gl = r.glow.value;
+    for (let i = 0; i < ga.count; i++) {
+      const a = ga.getX(i) * gl;
+      arr[i * 3] = r.base[i * 3]! * (1 - a * 0.6) + 0.55 * a;
+      arr[i * 3 + 1] = r.base[i * 3 + 1]! * (1 - a * 0.6) + 0.95 * a;
+      arr[i * 3 + 2] = r.base[i * 3 + 2]! * (1 - a * 0.6) + 0.1 * a;
+    }
+    col.needsUpdate = true;
 
     // place hips at the guide root
     r.root.position.copy(guide.root.position).sub(r.hipOffset);
